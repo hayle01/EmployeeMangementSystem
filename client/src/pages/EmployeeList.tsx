@@ -2,14 +2,12 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronDown,
-  Eye,
+  EllipsisVertical,
   LayoutGrid,
   List,
-  Pencil,
   Plus,
   RotateCcw,
   Search,
-  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteEmployee, useEmployees, type Employee } from "@/hooks/useEmployees";
@@ -18,7 +16,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
@@ -60,11 +65,15 @@ export default function EmployeeList() {
   const deleteEmployee = useDeleteEmployee();
 
   const departments = useMemo(() => {
-    return Array.from(new Set(employees.map((employee) => employee.department))).sort();
+    return Array.from(
+      new Set(employees.map((employee) => employee.department)),
+    ).sort();
   }, [employees]);
 
   const districts = useMemo(() => {
-    return Array.from(new Set(employees.map((employee) => employee.district))).sort();
+    return Array.from(
+      new Set(employees.map((employee) => employee.district)),
+    ).sort();
   }, [employees]);
 
   const handleDelete = async () => {
@@ -89,7 +98,8 @@ export default function EmployeeList() {
     setStatus("");
   };
 
-  const isActive = (employee: Employee) => new Date(employee.expireDate) >= new Date();
+  const isActive = (employee: Employee) =>
+    new Date(employee.expireDate) >= new Date();
 
   const departmentLabel = department || "All Departments";
   const districtLabel = district || "All Districts";
@@ -158,7 +168,9 @@ export default function EmployeeList() {
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{employees.length} employee(s) found</p>
+        <p className="text-sm text-muted-foreground">
+          {employees.length} employee(s) found
+        </p>
 
         <Tabs value={view} onValueChange={(value) => setView(value as ViewMode)}>
           <TabsList>
@@ -185,7 +197,7 @@ export default function EmployeeList() {
                 <TableHead>Department</TableHead>
                 <TableHead>Expire Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="">Actions</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -206,46 +218,35 @@ export default function EmployeeList() {
                   <TableCell className="font-mono text-xs">{employee.empNo}</TableCell>
                   <TableCell className="text-xs">{employee.titleEn}</TableCell>
                   <TableCell>{employee.department}</TableCell>
-                  <TableCell>{new Date(employee.expireDate).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {new Date(employee.expireDate).toLocaleDateString()}
+                  </TableCell>
 
                   <TableCell>
                     <Badge
                       variant={isActive(employee) ? "default" : "destructive"}
-                      className={isActive(employee) ? "bg-green-600 hover:bg-success/90" : ""}
+                      className={
+                        isActive(employee)
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : ""
+                      }
                     >
                       {isActive(employee) ? "Active" : "Expired"}
                     </Badge>
                   </TableCell>
 
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="cursor-pointer"
-                        onClick={() => navigate(`/dashboard/employees/${employee.id}`)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="cursor-pointer"
-                        onClick={() => navigate(`/dashboard/employees/${employee.id}/edit`)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="cursor-pointer"
-                        onClick={() => setDeleteId(employee.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                  <TableCell className="">
+                    <EmployeeActionsMenu
+                      employee={employee}
+                      onView={() => navigate(`/dashboard/employees/${employee.id}`)}
+                      onEdit={() =>
+                        navigate(`/dashboard/employees/${employee.id}/edit`)
+                      }
+                      onRenew={() =>
+                        navigate(`/dashboard/employees/${employee.id}/renew`)
+                      }
+                      onDelete={() => setDeleteId(employee.id)}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -265,7 +266,7 @@ export default function EmployeeList() {
           {employees.map((employee) => (
             <Card key={employee.id} className="overflow-hidden">
               <CardContent className="p-5">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <EmployeeAvatar
                       name={employee.name}
@@ -280,7 +281,11 @@ export default function EmployeeList() {
 
                   <Badge
                     variant={isActive(employee) ? "default" : "destructive"}
-                    className={isActive(employee) ? "bg-green-600 " : ""}
+                    className={
+                      isActive(employee)
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : ""
+                    }
                   >
                     {isActive(employee) ? labels.common.active : labels.common.expired}
                   </Badge>
@@ -291,35 +296,18 @@ export default function EmployeeList() {
                   <p>{employee.department}</p>
                 </div>
 
-                <div className="mt-4 flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-11 flex-1 cursor-pointer"
-                    onClick={() => navigate(`/dashboard/employees/${employee.id}`)}
-                  >
-                    <Eye className="mr-1 h-3 w-3" />
-                    View
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-11 flex-1 cursor-pointer"
-                    onClick={() => navigate(`/dashboard/employees/${employee.id}/edit`)}
-                  >
-                    <Pencil className="mr-1 h-3 w-3" />
-                    Edit
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-11 w-11 cursor-pointer"
-                    onClick={() => setDeleteId(employee.id)}
-                  >
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </Button>
+                <div className="mt-4 flex justify-end">
+                  <EmployeeActionsMenu
+                    employee={employee}
+                    onView={() => navigate(`/dashboard/employees/${employee.id}`)}
+                    onEdit={() =>
+                      navigate(`/dashboard/employees/${employee.id}/edit`)
+                    }
+                    onRenew={() =>
+                      navigate(`/dashboard/employees/${employee.id}/renew`)
+                    }
+                    onDelete={() => setDeleteId(employee.id)}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -348,6 +336,52 @@ export default function EmployeeList() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+interface EmployeeActionsMenuProps {
+  employee: Employee;
+  onView: () => void;
+  onEdit: () => void;
+  onRenew: () => void;
+  onDelete: () => void;
+}
+
+function EmployeeActionsMenu({
+  employee,
+  onView,
+  onEdit,
+  onRenew,
+  onDelete,
+}: EmployeeActionsMenuProps) {
+  const active = new Date(employee.expireDate) >= new Date();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger >
+        <Button variant="ghost" size="icon" className="cursor-pointer">
+          <EllipsisVertical className="h-5 w-5" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="center">
+        <DropdownMenuItem className="cursor-pointer" onClick={onView}>
+          View
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer" onClick={onEdit}>
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer" onClick={onRenew}>
+          {active ? "Renew / Reissue" : "Renew"}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer text-destructive focus:text-destructive"
+          onClick={onDelete}
+        >
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

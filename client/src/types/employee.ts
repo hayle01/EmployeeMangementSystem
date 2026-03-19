@@ -1,3 +1,5 @@
+export type EmployeeHistoryActionType = "update" | "renew";
+
 export interface Employee {
   id: string;
   _id: string;
@@ -7,7 +9,7 @@ export interface Employee {
   titleLocal: string;
   department: string;
   mobile: string;
-  email: string;
+  email: string | null;
   nationalId: string;
   address: string;
   district: string;
@@ -37,7 +39,7 @@ export interface CreateEmployeeInput {
   titleLocal: string;
   department: string;
   mobile: string;
-  email: string;
+  email?: string;
   nationalId: string;
   address: string;
   district: string;
@@ -50,6 +52,21 @@ export interface UpdateEmployeeInput extends CreateEmployeeInput {
   id: string;
 }
 
+export interface RenewEmployeeInput {
+  id: string;
+  titleEn: string;
+  titleLocal: string;
+  department: string;
+  mobile: string;
+  email?: string;
+  nationalId: string;
+  address: string;
+  district: string;
+  issueDate: string;
+  expireDate: string;
+  profileImage?: File | null;
+}
+
 export interface EmployeeHistoryItem {
   empNo: string;
   name: string;
@@ -59,13 +76,14 @@ export interface EmployeeHistoryItem {
   mobile: string;
   nationalId: string;
   address: string;
-  email: string;
+  email: string | null;
   district: string;
   issueDate: string;
   expireDate: string;
   profileImageUrl: string | null;
   qrImageUrl: string | null;
   publicSlug: string;
+  actionType?: EmployeeHistoryActionType;
   statusAtThatTime: "Active" | "Expired";
   recordedAt: string;
 }

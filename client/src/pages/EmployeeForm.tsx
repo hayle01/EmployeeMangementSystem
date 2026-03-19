@@ -16,7 +16,14 @@ const employeeSchema = z.object({
   titleLocal: z.string().min(1, "Local title is required").max(100),
   department: z.string().min(1, "Department is required").max(100),
   mobile: z.string().min(1, "Mobile is required").max(20),
-  email: z.string().email("Valid email is required"),
+  email: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .refine((value) => !value || /\S+@\S+\.\S+/.test(value), {
+      message: "Valid email is required",
+    }),
   nationalId: z.string().min(1, "National ID is required").max(50),
   address: z.string().min(1, "Address is required").max(500),
   district: z.string().min(1, "District is required").max(100),
@@ -64,7 +71,7 @@ export default function EmployeeForm() {
         titleLocal: employee.titleLocal,
         department: employee.department,
         mobile: employee.mobile,
-        email: employee.email,
+        email: employee.email ?? "",
         nationalId: employee.nationalId,
         address: employee.address,
         district: employee.district,
@@ -134,8 +141,6 @@ export default function EmployeeForm() {
         profileImage: imageFile,
       };
 
-      console.log("Payload: ", payload)
- 
       if (isEditing && id) {
         await updateEmployee.mutateAsync({ id, ...payload });
         toast.success("Employee updated successfully");
@@ -275,13 +280,13 @@ export default function EmployeeForm() {
               placeholder="123 Main St, City"
               error={errors.address}
             />
-              <Field
-                label={labels.employee.district}
-                value={values.district}
-                onChange={(value) => setFieldValue("district", value)}
-                placeholder="Banadir"
-                error={errors.district}
-              />
+            <Field
+              label={labels.employee.district}
+              value={values.district}
+              onChange={(value) => setFieldValue("district", value)}
+              placeholder="Banadir"
+              error={errors.district}
+            />
           </CardContent>
         </Card>
 
@@ -292,7 +297,7 @@ export default function EmployeeForm() {
 
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-               <Field
+              <Field
                 label={labels.employee.nationalId}
                 value={values.nationalId}
                 onChange={(value) => setFieldValue("nationalId", value)}
@@ -341,7 +346,7 @@ export default function EmployeeForm() {
 
 interface FieldProps {
   label: string;
-  value: string;
+  value: string | undefined;
   onChange: (value: string) => void;
   placeholder?: string;
   error?: string;

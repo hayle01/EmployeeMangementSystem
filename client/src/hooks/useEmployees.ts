@@ -3,6 +3,7 @@ import { employeeApi } from "@/api/employeeApi";
 import type {
   CreateEmployeeInput,
   EmployeeFilters,
+  RenewEmployeeInput,
   UpdateEmployeeInput,
 } from "@/types/employee";
 
@@ -56,6 +57,19 @@ export function useUpdateEmployee() {
 
   return useMutation({
     mutationFn: (input: UpdateEmployeeInput) => employeeApi.update(input),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["employee", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["employee-history", variables.id] });
+    },
+  });
+}
+
+export function useRenewEmployee() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: RenewEmployeeInput) => employeeApi.renew(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       queryClient.invalidateQueries({ queryKey: ["employee", variables.id] });

@@ -1,5 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export type EmployeeHistoryActionType = "update" | "renew";
+
 export interface IEmployeeHistoryItem {
   empNo: string;
   name: string;
@@ -7,7 +9,7 @@ export interface IEmployeeHistoryItem {
   titleLocal: string;
   department: string;
   mobile: string;
-  email: string;
+  email?: string | null;
   nationalId: string;
   address: string;
   district: string;
@@ -16,6 +18,7 @@ export interface IEmployeeHistoryItem {
   profileImageUrl?: string | null;
   qrImageUrl?: string | null;
   publicSlug: string;
+  actionType: EmployeeHistoryActionType;
   statusAtThatTime: "Active" | "Expired";
   recordedAt: Date;
 }
@@ -27,7 +30,7 @@ export interface IEmployee {
   titleLocal: string;
   department: string;
   mobile: string;
-  email: string;
+  email?: string | null;
   nationalId: string;
   address: string;
   district: string;
@@ -55,7 +58,7 @@ const employeeHistorySchema = new Schema<IEmployeeHistoryItem>(
     titleLocal: { type: String, required: true, trim: true },
     department: { type: String, required: true, trim: true },
     mobile: { type: String, required: true, trim: true },
-    email: { type: String, required: true, trim: true, lowercase: true },
+    email: { type: String, trim: true, lowercase: true, default: null },
     nationalId: { type: String, required: true, trim: true },
     address: { type: String, required: true, trim: true },
     district: { type: String, required: true, trim: true },
@@ -64,6 +67,12 @@ const employeeHistorySchema = new Schema<IEmployeeHistoryItem>(
     profileImageUrl: { type: String, default: null },
     qrImageUrl: { type: String, default: null },
     publicSlug: { type: String, required: true },
+    actionType: {
+      type: String,
+      enum: ["update", "renew"],
+      required: true,
+      default: "update",
+    },
     statusAtThatTime: {
       type: String,
       enum: ["Active", "Expired"],
@@ -109,9 +118,9 @@ const employeeSchema = new Schema<IEmployeeDocument>(
     },
     email: {
       type: String,
-      required: true,
       trim: true,
       lowercase: true,
+      default: null,
     },
     nationalId: {
       type: String,
@@ -172,4 +181,7 @@ employeeSchema.virtual("status").get(function (this: IEmployeeDocument) {
 employeeSchema.set("toJSON", { virtuals: true });
 employeeSchema.set("toObject", { virtuals: true });
 
-export const Employee = mongoose.model<IEmployeeDocument>("Employee", employeeSchema);
+export const Employee = mongoose.model<IEmployeeDocument>(
+  "Employee",
+  employeeSchema,
+);

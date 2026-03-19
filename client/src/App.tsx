@@ -9,6 +9,7 @@ import EmployeePublic from "./pages/EmployeePublic";
 import Dashboard from "./pages/Dashboard";
 import EmployeeList from "./pages/EmployeeList";
 import EmployeeForm from "./pages/EmployeeForm";
+import EmployeeRenew from "./pages/EmployeeRenew";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import UserManagement from "./pages/UserManagement";
 import SettingsPage from "./pages/SettingsPage";
@@ -42,12 +43,14 @@ export default function App() {
                 <ProtectedRoute>
                   <DashboardLayout />
                 </ProtectedRoute>
-              }>
+              }
+            >
               <Route index element={<Dashboard />} />
               <Route path="employees" element={<EmployeeList />} />
               <Route path="employees/new" element={<EmployeeForm />} />
               <Route path="employees/:id" element={<EmployeeDetail />} />
               <Route path="employees/:id/edit" element={<EmployeeForm />} />
+              <Route path="employees/:id/renew" element={<EmployeeRenew />} />
               <Route
                 path="users"
                 element={

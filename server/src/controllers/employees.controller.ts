@@ -1,17 +1,20 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { nanoid } from "nanoid";
 import { Employee } from "../models/Employee";
 import { uploadBuffer, deleteImage } from "../services/cloudinary.service";
 import { generateQR } from "../services/qr.service";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
-
 import { z } from "zod";
-import { employeeSchema } from "../validators/employee.validators";
+import {
+  employeeSchema,
+  renewEmployeeSchema,
+} from "../validators/employee.validators";
 import { buildEmployeeHistorySnapshot } from "../utils/employeeHistory";
 import { AppRequest } from "../types/request";
 
 type EmployeeInput = z.infer<typeof employeeSchema>;
+type RenewEmployeeInput = z.infer<typeof renewEmployeeSchema>;
 
 async function generateAndUploadQR(
   publicSlug: string,
@@ -62,7 +65,6 @@ export const listEmployees = asyncHandler(
       employees = employees.filter((e) => new Date() > new Date(e.expireDate));
     }
 
-    console.log("employees: ", employees);
     res.json(employees);
   },
 );
@@ -92,12 +94,13 @@ export const createEmployee = asyncHandler(
     }
 
     const qrUploaded = await generateAndUploadQR(publicSlug);
+    const normalizedEmail = data.email?.trim() ? data.email.trim() : null;
 
     const employee = await Employee.create({
       ...data,
       titleEn: data.titleEn,
       titleLocal: data.titleLocal,
-      email: data.email,
+      email: normalizedEmail,
       issueDate: new Date(data.issueDate),
       expireDate: new Date(data.expireDate),
       publicSlug,
@@ -107,9 +110,6 @@ export const createEmployee = asyncHandler(
       qrImagePublicId: qrUploaded.public_id,
       history: [],
     });
-
-    console.log("create req.body:", req.body);
-    console.log("create validatedData:", req.validatedData);
 
     res.status(201).json(employee);
   },
@@ -121,7 +121,7 @@ export const getEmployee = asyncHandler(
     if (!employee) {
       throw new ApiError(404, "Employee not found");
     }
-    console.log("employee: ", employee);
+
     res.json(employee);
   },
 );
@@ -165,7 +165,7 @@ export const updateEmployee = asyncHandler(
       }
     }
 
-    employee.history.push(buildEmployeeHistorySnapshot(employee));
+    employee.history.push(buildEmployeeHistorySnapshot(employee, "update"));
 
     let profileImageUrl = employee.profileImageUrl ?? null;
     let profileImagePublicId = employee.profileImagePublicId ?? null;
@@ -189,6 +189,8 @@ export const updateEmployee = asyncHandler(
       employee.qrImagePublicId,
     );
 
+    const normalizedEmail = data.email?.trim() ? data.email.trim() : null;
+
     employee.empNo = data.empNo;
     employee.name = data.name;
     employee.department = data.department;
@@ -204,11 +206,65 @@ export const updateEmployee = asyncHandler(
     employee.qrImagePublicId = qrUploaded.public_id;
     employee.titleEn = data.titleEn;
     employee.titleLocal = data.titleLocal;
-    employee.email = data.email;
+    employee.email = normalizedEmail;
 
     await employee.save();
-    console.log("update req.body:", req.body);
-    console.log("update validatedData:", req.validatedData);
+
+    res.json(employee);
+  },
+);
+
+export const renewEmployee = asyncHandler(
+  async (req: AppRequest, res: Response) => {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) {
+      throw new ApiError(404, "Employee not found");
+    }
+
+    const data = req.validatedData as RenewEmployeeInput;
+
+    employee.history.push(buildEmployeeHistorySnapshot(employee, "renew"));
+
+    let profileImageUrl = employee.profileImageUrl ?? null;
+    let profileImagePublicId = employee.profileImagePublicId ?? null;
+
+    if (req.file) {
+      if (employee.profileImagePublicId) {
+        await deleteImage(employee.profileImagePublicId);
+      }
+
+      const uploaded = await uploadBuffer(
+        req.file.buffer,
+        "employeeconnect/profiles",
+        `profile_${employee.publicSlug}`,
+      );
+      profileImageUrl = uploaded.secure_url;
+      profileImagePublicId = uploaded.public_id;
+    }
+
+    const qrUploaded = await generateAndUploadQR(
+      employee.publicSlug,
+      employee.qrImagePublicId,
+    );
+
+    const normalizedEmail = data.email?.trim() ? data.email.trim() : null;
+
+    employee.titleEn = data.titleEn;
+    employee.titleLocal = data.titleLocal;
+    employee.department = data.department;
+    employee.mobile = data.mobile;
+    employee.email = normalizedEmail;
+    employee.nationalId = data.nationalId;
+    employee.address = data.address;
+    employee.district = data.district;
+    employee.issueDate = new Date(data.issueDate);
+    employee.expireDate = new Date(data.expireDate);
+    employee.profileImageUrl = profileImageUrl;
+    employee.profileImagePublicId = profileImagePublicId;
+    employee.qrImageUrl = qrUploaded.secure_url;
+    employee.qrImagePublicId = qrUploaded.public_id;
+
+    await employee.save();
 
     res.json(employee);
   },

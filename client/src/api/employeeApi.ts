@@ -6,6 +6,7 @@ import type {
   Employee,
   EmployeeFilters,
   EmployeeHistoryResponse,
+  RenewEmployeeInput,
   UpdateEmployeeInput,
 } from "@/types/employee";
 
@@ -18,7 +19,6 @@ function buildEmployeeFormData(
   formData.append("name", input.name);
   formData.append("titleEn", input.titleEn);
   formData.append("titleLocal", input.titleLocal);
-  formData.append("email", input.email);
   formData.append("department", input.department);
   formData.append("mobile", input.mobile);
   formData.append("nationalId", input.nationalId);
@@ -26,6 +26,34 @@ function buildEmployeeFormData(
   formData.append("district", input.district);
   formData.append("issueDate", input.issueDate);
   formData.append("expireDate", input.expireDate);
+
+  if (input.email?.trim()) {
+    formData.append("email", input.email.trim());
+  }
+
+  if (input.profileImage) {
+    formData.append("profileImage", input.profileImage);
+  }
+
+  return formData;
+}
+
+function buildRenewFormData(input: RenewEmployeeInput): FormData {
+  const formData = new FormData();
+
+  formData.append("titleEn", input.titleEn);
+  formData.append("titleLocal", input.titleLocal);
+  formData.append("department", input.department);
+  formData.append("mobile", input.mobile);
+  formData.append("nationalId", input.nationalId);
+  formData.append("address", input.address);
+  formData.append("district", input.district);
+  formData.append("issueDate", input.issueDate);
+  formData.append("expireDate", input.expireDate);
+
+  if (input.email?.trim()) {
+    formData.append("email", input.email.trim());
+  }
 
   if (input.profileImage) {
     formData.append("profileImage", input.profileImage);
@@ -69,27 +97,38 @@ export const employeeApi = {
     return mapEmployee(data);
   },
 
- async create(input: CreateEmployeeInput): Promise<Employee> {
-  const formData = buildEmployeeFormData(input);
+  async create(input: CreateEmployeeInput): Promise<Employee> {
+    const formData = buildEmployeeFormData(input);
 
-  const { data } = await apiClient.post<unknown>(
-    endpoints.employees.create,
-    formData,
-  );
+    const { data } = await apiClient.post<unknown>(
+      endpoints.employees.create,
+      formData,
+    );
 
-  return mapEmployee(data);
-},
+    return mapEmployee(data);
+  },
 
- async update(input: UpdateEmployeeInput): Promise<Employee> {
-  const formData = buildEmployeeFormData(input);
+  async update(input: UpdateEmployeeInput): Promise<Employee> {
+    const formData = buildEmployeeFormData(input);
 
-  const { data } = await apiClient.put<unknown>(
-    endpoints.employees.update(input.id),
-    formData,
-  );
+    const { data } = await apiClient.put<unknown>(
+      endpoints.employees.update(input.id),
+      formData,
+    );
 
-  return mapEmployee(data);
-},
+    return mapEmployee(data);
+  },
+
+  async renew(input: RenewEmployeeInput): Promise<Employee> {
+    const formData = buildRenewFormData(input);
+
+    const { data } = await apiClient.patch<unknown>(
+      endpoints.employees.renew(input.id),
+      formData,
+    );
+
+    return mapEmployee(data);
+  },
 
   async remove(id: string): Promise<{ message: string }> {
     const { data } = await apiClient.delete<{ message: string }>(

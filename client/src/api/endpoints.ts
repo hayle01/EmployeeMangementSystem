@@ -8,6 +8,7 @@ export const endpoints = {
     create: "/api/employees",
     detail: (id: string) => `/api/employees/${id}`,
     update: (id: string) => `/api/employees/${id}`,
+    renew: (id: string) => `/api/employees/${id}/renew`,
     delete: (id: string) => `/api/employees/${id}`,
     history: (id: string) => `/api/employees/${id}/history`,
     public: (slug: string) => `/api/public/employee/${slug}`,

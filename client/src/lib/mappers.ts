@@ -9,7 +9,7 @@ interface RawEmployee {
   titleLocal: string;
   department: string;
   mobile: string;
-  email: string;
+  email?: string | null;
   nationalId: string;
   address: string;
   district: string;
@@ -44,7 +44,7 @@ export function mapEmployee(raw: unknown): Employee {
     name: value.name,
     titleEn: value.titleEn,
     titleLocal: value.titleLocal,
-    email: value.email,
+    email: value.email ?? null,
     department: value.department,
     mobile: value.mobile,
     nationalId: value.nationalId,
