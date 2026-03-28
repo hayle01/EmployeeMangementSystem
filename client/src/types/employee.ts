@@ -20,6 +20,7 @@ export interface Employee {
   qrImageUrl: string | null;
   qrImagePublicId: string | null;
   publicSlug: string;
+  history: EmployeeHistoryItem[];
   status: "Active" | "Expired";
   createdAt: string;
   updatedAt: string;

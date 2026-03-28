@@ -1,4 +1,4 @@
-import type { Employee } from "@/types/employee";
+import type { Employee, EmployeeHistoryItem } from "@/types/employee";
 import type { AppUser } from "@/types/user";
 
 interface RawEmployee {
@@ -20,6 +20,7 @@ interface RawEmployee {
   qrImageUrl?: string | null;
   qrImagePublicId?: string | null;
   publicSlug: string;
+  history?: EmployeeHistoryItem[];
   status: "Active" | "Expired";
   createdAt: string;
   updatedAt: string;
@@ -57,6 +58,7 @@ export function mapEmployee(raw: unknown): Employee {
     qrImageUrl: value.qrImageUrl ?? null,
     qrImagePublicId: value.qrImagePublicId ?? null,
     publicSlug: value.publicSlug,
+    history: value.history ?? [],
     status: value.status,
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
